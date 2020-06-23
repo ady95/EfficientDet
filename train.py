@@ -144,7 +144,8 @@ def create_generators(args):
         'batch_size': args.batch_size,
         'phi': args.phi,
         'detect_text': args.detect_text,
-        'detect_quadrangle': args.detect_quadrangle
+        'detect_quadrangle': args.detect_quadrangle,
+        'detect_carplate': args.detect_carplate
     }
 
     # create random transform generator for augmenting training data
@@ -260,6 +261,7 @@ def parse_args(args):
                             help='Path to CSV file containing annotations for validation (optional).')
     parser.add_argument('--detect-quadrangle', help='If to detect quadrangle.', action='store_true', default=False)
     parser.add_argument('--detect-text', help='If is text detection task.', action='store_true', default=False)
+    parser.add_argument('--detect-carplate', help='If is carplate detection task.', action='store_true', default=False)
 
     parser.add_argument('--snapshot', help='Resume training from a snapshot.')
     parser.add_argument('--freeze-backbone', help='Freeze training of backbone layers.', action='store_true')
@@ -304,12 +306,17 @@ def main(args=None):
     num_classes = train_generator.num_classes()
     num_anchors = train_generator.num_anchors
 
+
+
+
+    print("==================")
+    print(num_classes, num_anchors)
+    print("==================")
     # optionally choose specific GPU
     if args.gpu:
         os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
 
     # K.set_session(get_session())
-
     model, prediction_model = efficientdet(args.phi,
                                            num_classes=num_classes,
                                            num_anchors=num_anchors,

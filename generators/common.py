@@ -23,6 +23,7 @@ class Generator(keras.utils.Sequence):
             shuffle_groups=True,
             detect_text=False,
             detect_quadrangle=False,
+            detect_carplate=False
     ):
         """
         Initialize Generator object.
@@ -40,11 +41,26 @@ class Generator(keras.utils.Sequence):
         self.shuffle_groups = shuffle_groups
         self.detect_text = detect_text
         self.detect_quadrangle = detect_quadrangle
+        self.detect_carplate = detect_carplate
+
         self.image_size = image_sizes[phi]
         self.groups = None
-        self.anchor_parameters = AnchorParameters.default if not self.detect_text else AnchorParameters(
-            ratios=(0.25, 0.5, 1., 2.),
-            sizes=(16, 32, 64, 128, 256))
+        # self.anchor_parameters = AnchorParameters.default if not self.detect_text else AnchorParameters(
+        #     ratios=(0.25, 0.5, 1., 2.),
+        #     sizes=(16, 32, 64, 128, 256))
+        self.anchor_parameters = AnchorParameters.default
+
+        print("detect_carplate:", self.detect_carplate)
+
+        if self.detect_carplate == True:
+            self.anchor_parameters = AnchorParameters(
+                ratios=(0.25, 0.5, 1.),
+                sizes=(16, 32, 64, 128, 256))
+        elif self.detect_text == True:
+            self.anchor_parameters = AnchorParameters(
+                ratios=(0.25, 0.5, 1., 2.),
+                sizes=(16, 32, 64, 128, 256))
+
         self.anchors = anchors_for_shape((self.image_size, self.image_size), anchor_params=self.anchor_parameters)
         self.num_anchors = self.anchor_parameters.num_anchors()
 

@@ -9,20 +9,40 @@ import os.path as osp
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
-phi = 3
+phi = 0
 weighted_bifpn = False
-model_path = 'checkpoints/2020-02-20/csv_02_1.6506_2.5878_w.h5'
+# model_path = 'checkpoints/2020-02-20/csv_02_1.6506_2.5878_w.h5'
+# model_path = 'checkpoints/2020-06-18/3/csv_20_0.4002_0.4496.h5'
+# model_path = 'checkpoints/2020-06-19/1/csv_10_0.3809_0.2011.h5'
+# model_path = 'checkpoints/2020-06-19/csv_50_0.4456_1.0771.h5'
+# model_path = 'checkpoints/2020-06-19/csv_50_0.3900_0.7346.h5'
+model_path = 'checkpoints/2020-06-20/csv_50_0.4001_0.7419.h5'
 image_sizes = (512, 640, 768, 896, 1024, 1280, 1408)
 image_size = image_sizes[phi]
 # classes = [
 #     'aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car', 'cat', 'chair',
 #     'cow', 'diningtable', 'dog', 'horse', 'motorbike', 'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor',
 # ]
-classes = ['text']
+# classes = ['text']
+classes = ['LP']
 num_classes = len(classes)
+
+# anchor_parameters = AnchorParameters(
+#     ratios=(0.25, 0.5, 1., 2.),
+#     sizes=(16, 32, 64, 128, 256))
+
+# train 할 때와 num_anchors (9) 를 맞추기 위해서 default 값을 이용함
+# anchor_parameters = AnchorParameters.default
+
+# detect_carplate 일 때
 anchor_parameters = AnchorParameters(
-    ratios=(0.25, 0.5, 1., 2.),
+    ratios=(0.25, 0.5, 1.),
     sizes=(16, 32, 64, 128, 256))
+
+anchors = anchors_for_shape((image_size, image_size), anchor_params=anchor_parameters)
+num_anchors = anchor_parameters.num_anchors()
+print(num_classes, num_anchors)
+
 score_threshold = 0.4
 colors = [np.random.randint(0, 256, 3).tolist() for i in range(num_classes)]
 model, prediction_model = efficientdet(phi=phi,
@@ -31,13 +51,19 @@ model, prediction_model = efficientdet(phi=phi,
                                        num_anchors=anchor_parameters.num_anchors(),
                                        score_threshold=score_threshold,
                                        detect_quadrangle=True,
+                                       # detect_carplate=True,
                                        anchor_parameters=anchor_parameters,
                                        )
 prediction_model.load_weights(model_path, by_name=True)
 
 import glob
 
-for image_path in glob.glob('datasets/ic15/test_images/*.jpg'):
+
+# for image_path in glob.glob('datasets/ic15/test_images/*.jpg'):
+# for image_path in glob.glob(r'E:\DATA\@car\car_photo\carphoto_20190612\*.jpg'):
+for image_path in glob.glob(r'E:\GITCAR\EfficientDet\image_carplate\*.jpg'):
+    if not image_path.endswith(".jpg"): continue
+
     image = cv2.imread(image_path)
     src_image = image.copy()
     image = image[:, :, ::-1]
@@ -99,12 +125,12 @@ for image_path in glob.glob('datasets/ic15/test_images/*.jpg'):
         class_name = classes[class_id]
         label = '-'.join([class_name, score])
         ret, baseline = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
-        cv2.rectangle(src_image, (xmin, ymin), (xmax, ymax), (0, 255, 0), 1)
+        cv2.rectangle(src_image, (xmin, ymin), (xmax, ymax), (0, 255, 0), 2)
         # cv2.rectangle(src_image, (xmin, ymax - ret[1] - baseline), (xmin + ret[0], ymax), color, -1)
         # cv2.putText(src_image, label, (xmin, ymax - baseline), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
         cv2.putText(src_image, f'{ratio:.2f}', (xmin + (xmax - xmin) // 3, (ymin + ymax) // 2),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 1)
-        cv2.drawContours(src_image, [quadrangle.astype(np.int32).reshape((4, 2))], -1, (0, 0, 255), 1)
+        cv2.drawContours(src_image, [quadrangle.astype(np.int32).reshape((4, 2))], -1, (0, 0, 255), 2)
     cv2.namedWindow('image', cv2.WINDOW_NORMAL)
     cv2.imshow('image', src_image)
     cv2.waitKey(0)

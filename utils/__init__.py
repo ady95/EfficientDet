@@ -107,6 +107,7 @@ def preprocess_image(image, image_size):
     pad_w = image_size - resized_width
     image = np.pad(image, [(0, pad_h), (0, pad_w), (0, 0)], mode='constant')
 
+    # return image, scale, 0, 0
     return image, scale
 
 
